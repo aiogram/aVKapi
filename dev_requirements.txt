@@ -1,0 +1,6 @@
+-r requirements.txt
+
+aresponses
+pytest
+ujson
+uvloop
