@@ -128,3 +128,29 @@ class Dispatcher:
         if run_task:
             return self.async_task(callback)
         return callback
+
+    def stop_polling(self):
+        """
+        Break long-polling process.
+
+        :return:
+        """
+        if self._polling:
+            logger.info('Stop polling...')
+            self._polling = False
+
+    async def wait_closed(self):
+        """
+        Wait for the long-polling to close
+
+        :return:
+        """
+        await asyncio.shield(self._close_waiter, loop=self.loop)
+
+    def is_polling(self):
+        """
+        Check if polling is enabled
+
+        :return:
+        """
+        return self._polling
