@@ -1,6 +1,6 @@
 """
-Sourced by aiogram (telegram asyncio library)
-Copyright AlexRootJunior
+In this library you can find pieces of aiogram code by Alex Root Junior
+https://github.com/aiogram/aiogram/
 
 """
 
