@@ -2,3 +2,4 @@ start.json
 draft*
 config*
 venv/
+.idea/
