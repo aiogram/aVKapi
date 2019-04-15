@@ -91,12 +91,15 @@ class KeyboardButton(VKObject):
     color: base.String = fields.Field()
 
     def __init__(self, label: base.String,
-                 payload: base.String,
+                 payload: base.String = None,
                  color: base.String = Colours.DEFAULT):
         self.label = label
         self.color = color
-        self.payload = payload
-        self.action = {"type": "text", "label": self.label, "payload": json.dumps({"button": self.payload})}
+        self.action = {"type": "text", "label": self.label}
+
+        if payload:
+            self.payload = payload
+            self.action["payload"] = json.dumps({"button": self.payload})
         super(KeyboardButton, self).__init__(action=self.action,
                                              color=self.color)
 
