@@ -3,7 +3,7 @@ import logging
 
 from aiohttp import ClientSession
 
-from .methods import Messages
+from .methods import Messages, Users
 from .utils import json
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,7 @@ class VK:
 
         self._session = ClientSession(loop=self.loop, json_serialize=json.dumps)
         self.messages = Messages(access_token=access_token, session=self._session, api_version=self.api_version)
+        self.users = Users(access_token=access_token, session=self._session, api_version=self.api_version)
 
     async def get_session(self):
         if not self._session:
