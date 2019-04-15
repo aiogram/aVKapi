@@ -123,7 +123,8 @@ class WebhookRequestHandler(web.View):
 
         dispatcher = self.get_dispatcher()
         event = await self.parse_event(dispatcher.vk)
-
+        if hasattr(event, "_body") and event._body == dispatcher.vk.confirmation_code.encode():
+            return event
         asyncio.ensure_future(dispatcher.process_event(event))
         return web.Response(text='ok')
 

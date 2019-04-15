@@ -1,5 +1,15 @@
+import io
 import logging
+from typing import TypeVar
+
 logger = logging.getLogger(__name__)
+
+# Binding of builtin types
+InputFile = TypeVar('InputFile', 'InputFile', io.BytesIO, io.FileIO, str)
+String = TypeVar('String', bound=str)
+Integer = TypeVar('Integer', bound=int)
+Float = TypeVar('Float', bound=float)
+Boolean = TypeVar('Boolean', bound=bool)
 
 
 class BaseMethod:
@@ -21,10 +31,10 @@ class BaseMethod:
         parameters['v'] = self._api_version
         p = {k: v for k, v in parameters.items() if v is not None}
         link = f'https://api.vk.com/method/{method_name}'
-
         async with self._session.post(link, params=p) as resp:
             status = resp.status
             text = await resp.text()
             logger.info(f'Response: {status}, {text}')
 
         return text
+

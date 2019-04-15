@@ -290,7 +290,7 @@ class Executor:
         pass
 
     async def _shutdown(self):
-        self.dispatcher.stop_polling()
+        # self.dispatcher.stop_polling()
         await self.dispatcher.storage.close()
         await self.dispatcher.storage.wait_closed()
         await self.dispatcher.vk.close()
