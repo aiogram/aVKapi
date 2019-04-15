@@ -11,12 +11,11 @@ class Messages(BaseMethod):
     async def add_chat_user(self, chat_id: typing.Union[base.Integer, base.String],
                             user_id: typing.Union[base.Integer, base.String]) -> int:
         """
-        Добавляет в мультидиалог нового пользователя.
-        Чтобы пользователю вернуться в беседу, которую он сам покинул,
-        достаточно отправить сообщение в неё (если есть свободные места),
-        либо вызвать этот метод, передав свой идентификатор в параметре user_id.
-        :param chat_id: идентификатор беседы
-        :param user_id: идентификатор пользователя, которого необходимо включить в беседу
+        Adds a new user to a chat.
+        https://vk.com/dev/messages.addChatUser
+
+        :param chat_id: Chat ID.
+        :param user_id: ID of the user to be added to the chat
         :return: 1
         """
         parameters = generate_payload(**locals())
@@ -26,11 +25,12 @@ class Messages(BaseMethod):
     async def allow_messages_from_group(self, group_id: typing.Union[base.Integer, base.String],
                                         key: base.String = None) -> int:
         """
+        Allows sending messages from community to the current user
+        https://vk.com/dev/messages.allowMessagesFromGroup
 
-        Позволяет разрешить отправку сообщений от сообщества текущему пользователю
-        :param group_id: идентификатор сообщества.
-        :param key: произвольная строка. Этот параметр можно использовать для идентификации пользователя.
-        Его значение будет возвращено в событии message_allow Callback API.
+        :param group_id: Community ID..
+        :param key: Random string, can be used for the user identification. It returns with message_allow event in Callback API.
+
         :return: 1
         """
         parameters = generate_payload(**locals())
@@ -40,11 +40,13 @@ class Messages(BaseMethod):
     async def create_chat(self, user_ids: typing.Union[typing.List, typing.Tuple],
                           title: base.String) -> int:
         """
-        Создаёт беседу с несколькими участниками
-        :param user_ids: идентификаторы пользователей, которых нужно включить в мультидиалог.
-        Должны быть в друзьях у текущего пользователя.
-        :param title: название беседы
-        :return: После успешного выполнения возвращает идентификатор созданного чата (chat_id).
+        Creates a chat with several participants
+        https://vk.com/dev/messages.createChat
+
+        :param user_ids: IDs of the users to be added to the chat.
+        :param title: Chat title.
+
+        :return: Returns the ID of the created chat (chat_id).
         """
         if user_ids:
             user_ids = ",".join(user_ids)
@@ -57,12 +59,14 @@ class Messages(BaseMethod):
                      group_id: typing.Union[base.Integer, base.String, None] = None,
                      delete_for_all: base.Boolean = False) -> int:
         """
-        Удаляет сообщение
-        :param message_ids: список идентификаторов сообщений, разделённых через запятую
-        :param spam: пометить сообщения как спам.
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя).
-        :param delete_for_all: 1 — если сообщение нужно удалить для получателей
-        (если с момента отправки сообщения прошло не более 24 часов ).
+        Deletes one or more messages
+        https://vk.com/dev/messages.delete
+
+        :param message_ids: Message IDs
+        :param spam: 1 — to mark message as spam.
+        :param group_id: group ID (for community messages with a user access token).
+        :param delete_for_all: 1 — to delete message for recipient (in 24 hours from the sending time).
+
         :return:
         """
         if message_ids:
@@ -76,12 +80,16 @@ class Messages(BaseMethod):
     async def delete_chat_photo(self, chat_id: typing.Union[base.Integer, base.String],
                                 group_id: typing.Union[base.Integer, base.String, None] = None) -> int:
         """
-        Позволяет удалить фотографию мультидиалога
-        :param chat_id: идентификатор беседы
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя)
-        :return: После успешного выполнения возвращает объект, содержащий следующие поля:
-        message_id — идентификатор отправленного системного сообщения;
-        chat — объект мультидиалога.
+        Deletes a chat's cover picture
+        https://vk.com/dev/messages.deleteChatPhoto
+
+        :param chat_id: Chat ID.
+        :param group_id: Group ID
+
+        :return: Returns an object with the following fields:
+                 message_id ­– ID of the system message sent.
+                 chat – chat object.
+
         """
         parameters = generate_payload(**locals())
         result = await self._api_request(method_name="messages.deleteChatPhoto", parameters=parameters)
@@ -93,15 +101,14 @@ class Messages(BaseMethod):
                                   count: base.Integer = None,
                                   group_id: typing.Union[base.Integer, base.String, None] = None) -> int:
         """
-        Удаляет личные сообщения в беседе
-        :param user_id: идентификатор пользователя. Если требуется очистить историю беседы, используйте peer_id.
-        :param peer_id: идентификатор назначения
-        :param offset: начиная с какого сообщения нужно удалить переписку.
-        (По умолчанию удаляются все сообщения начиная с первого).
-        :param count: сколько сообщений нужно удалить. Обратите внимание, что на метод наложено ограничение,
-        за один вызов нельзя удалить больше 10000 сообщений,
-        поэтому если сообщений в переписке больше — метод нужно вызывать несколько раз.
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя)
+        Deletes private messages in a conversation
+        https://vk.com/dev/messages.deleteConversation
+
+        :param user_id: User ID.
+        :param peer_id: Destination ID
+        :param offset: Offset needed to return a specific subset of messages.
+        :param count: Number of messages to delete. Less then 10,000
+        :param group_id: Group ID
         :return: 1
         """
         if count > 10000:
@@ -112,8 +119,11 @@ class Messages(BaseMethod):
 
     async def deny_messages_from_group(self, group_id: typing.Union[base.Integer, base.String]) -> int:
         """
-        Позволяет запретить отправку сообщений от сообщества текущему пользователю
-        :param group_id: идентификатор сообщества
+        Denies sending message from community to the current user
+        https://vk.com/dev/messages.denyMessagesFromGroup
+
+        :param group_id: Community ID.
+
         :return:
         """
         parameters = generate_payload(**locals())
@@ -131,17 +141,22 @@ class Messages(BaseMethod):
                    group_id: typing.Union[base.Integer, base.String, None] = None,
                    dont_parse_links: base.Boolean = False) -> int:
         """
-        Редактирует сообщение
-        :param peer_id: идентификатор назначения
-        :param message_id: идентификатор сообщения
-        :param message: текст сообщения. Обязательный параметр, если не задан параметр attachment
-        :param lat: географическая широта (от -90 до 90).
-        :param long: географическая долгота (от -180 до 180).
-        :param attachment: медиавложения к личному сообщению
-        :param keep_forward_messages: 1, чтобы сохранить прикреплённые пересланные сообщения
-        :param keep_snippets: 1, чтобы сохранить прикреплённые внешние ссылки (сниппеты)
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя)
-        :param dont_parse_links: 1 — не создавать сниппет ссылки из сообщения
+        Edits the message.
+        You can edit sent message during 24 hours.
+        https://vk.com/dev/messages.edit
+
+        :param peer_id: Destination ID
+        :param message_id: Message ID.
+        :param message:  (Required if attachments is not set.) Text of the message
+        :param lat: Geographical latitude of a check-in, in degrees (from -90 to 90).
+        :param long: Geographical longitude of a check-in, in degrees (from -180 to 180).
+        :param attachment: (Required if message is not set.)
+                           List of objects attached to the message, separated by commas
+        :param keep_forward_messages: 1 — to keep forwarded, messages
+        :param keep_snippets: 1 — to keep attached snippets
+        :param group_id: group ID
+        :param dont_parse_links: flag, either 1 or 0, default
+
         :return: 1
         """
         keep_forward_messages = int(keep_forward_messages)
@@ -156,9 +171,11 @@ class Messages(BaseMethod):
     async def edit_chat(self, chat_id: typing.Union[base.Integer, base.String],
                         title: base.String) -> int:
         """
-        Изменяет название беседы.
-        :param chat_id: идентификатор беседы
-        :param title: новое название для беседы
+        Edits the title of a chat
+        https://vk.com/dev/messages.editChat
+
+        :param chat_id:
+        :param title:
         :return: 1
         """
         parameters = generate_payload(**locals())
@@ -171,14 +188,16 @@ class Messages(BaseMethod):
                                              fields: typing.Union[typing.List, typing.Tuple, None] = None,
                                              group_id: typing.Union[base.Integer, base.String, None] = None):
         """
-        Возвращает сообщения по их идентификаторам в рамках беседы или диалога
-        :param peer_id: идентификаторы назначений, разделённые запятой
-        :param conversation_message_ids: идентификаторы сообщений. Максимум 100 идентификаторов
-        :param extended: 1 — возвращать дополнительные поля.
-        :param fields: дополнительные поля пользователей и сообществ, которые необходимо вернуть в ответе.
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя).
-        :return: После успешного выполнения возвращает объект,
-        содержащий число результатов в поле count и массив объектов, описывающих сообщения, в поле items.
+        Returns conversations by their ids
+        https://vk.com/dev/messages.getByConversationMessageId
+
+        :param peer_id:
+        :param conversation_message_ids: Maximum 100
+        :param extended: 1 — return additional fields
+        :param fields: additional fields
+        :param group_id:
+
+        :return:
         """
         extended = int(extended)
         if conversation_message_ids:
@@ -194,15 +213,17 @@ class Messages(BaseMethod):
                         fields: typing.Union[typing.List, typing.Tuple, None] = None,
                         group_id: typing.Union[base.Integer, base.String, None] = None):
         """
-        Возвращает сообщения по их идентификаторам
-        :param message_ids: идентификаторы сообщений. Максимум 100 идентификаторов
-        :param preview_length: количество символов, по которому нужно обрезать сообщение.
-        Укажите 0, если Вы не хотите обрезать сообщение. (по умолчанию сообщения не обрезаются)
-        :param extended: 1 — возвращать дополнительные поля.
-        :param fields: дополнительные поля пользователей и сообществ, которые необходимо вернуть в ответе.
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя).
-        :return: После успешного выполнения возвращает объект,
-        содержащий число результатов в поле count и массив объектов, описывающих сообщения, в поле items.
+        Returns messages by their IDs.
+        https://vk.com/dev/messages.getById
+
+        :param message_ids: Maximum 100
+        :param preview_length: Number of characters after which to truncate a previewed message.
+                               To preview the full message, specify 0.
+        :param extended: 1 — return additional fields
+        :param fields: additional fields
+        :param group_id:
+
+        :return:
         """
         extended = int(extended)
         if fields:
@@ -216,27 +237,30 @@ class Messages(BaseMethod):
                        fields: typing.Union[typing.List, typing.Tuple, None] = None,
                        name_case: base.String = "nom"):
         """
-        Возвращает информацию о беседе
-        :param chat_id: идентификатор беседы
-        :param chat_ids: список идентификаторов бесед
-        :param fields: список дополнительных полей профилей, которые необходимо вернуть.
-        Доступные значения: nickname, screen_name, sex, bdate, city,
-                            country, timezone, photo_50, photo_100,
-                            photo_200_orig, has_mobile, contacts, education,
-                            online, counters, relation, last_seen, status,
-                            can_write_private_message, can_see_all_posts,
-                            can_post, universities
-        :param name_case: падеж для склонения имени и фамилии пользователя.
-        Возможные значения: nom — именительный,
-                            gen — родительный,
-                            dat — дательный,
-                            acc — винительный,
-                            ins — творительный,
-                            abl — предложный
-        :return: После успешного выполнения возвращает объект (или список объектов) мультидиалога.
+        Returns information about a chat.
+        https://vk.com/dev/messages.getChat
 
-                 Если был задан параметр fields, поле users содержит список объектов пользователей с
-                 дополнительным полем invited_by, содержащим идентификатор пользователя, пригласившего в беседу.
+        :param chat_id:
+        :param chat_ids:
+        :param fields: Profile fields to return.
+        Allowed fields: nickname, screen_name, sex, bdate, city,
+                        country, timezone, photo_50, photo_100,
+                        photo_200_orig, has_mobile, contacts, education,
+                        online, counters, relation, last_seen, status,
+                        can_write_private_message, can_see_all_posts,
+                        can_post, universities
+
+        :param name_case: Case for declension of user name and surname.
+        Возможные значения: nom — nominative,
+                            gen — genitive,
+                            dat — dative,
+                            acc — accusative,
+                            ins — instrumental,
+                            abl — prepositional
+
+        :return: Returns a list of chat objects.
+                 If the fields parameter is set, the users field contains a list of user objects
+                 with an additional invited_by field containing the ID of the user who invited the current user to chat.
         """
         if chat_ids:
             chat_ids = ",".join(chat_ids)
@@ -249,18 +273,284 @@ class Messages(BaseMethod):
     async def get_chat_preview(self, link: base.String,
                                fields: typing.Union[typing.List, typing.Tuple, None] = None):
         """
-        Получает данные для превью чата с приглашением по ссылке
-        :param link: ссылка-приглашение
-        :param fields: список полей профилей, данные о которых нужно получить.
-                       Полный список смотрите на https://vk.com/dev/objects/user
+        Allows to receive chat preview by the invitation link
+        https://vk.com/dev/messages.getChatPreview
 
-        :return: Возвращает объект, который содержит следующие поля:
-        preview object, profiles (array), groups (array), emails (array)
+        :param link: Invitation link
+        :param fields: List of profile fields to return.
+                       Full list of fields: https://vk.com/dev/objects/user
+
+        :return:
         """
         if fields:
             fields = ",".join(fields)
         parameters = generate_payload(**locals())
         result = await self._api_request(method_name="messages.getChatPreview", parameters=parameters)
+        return result
+
+    async def get_conversation_members(self, peer_id: typing.Union[base.Integer, base.String],
+                                       group_id: base.Integer = None,
+                                       fields: typing.Union[typing.List, typing.Tuple, None] = None):
+        """
+        Returns a list of IDs of users participating in a conversation
+        https://vk.com/dev/messages.getConversationMembers
+
+        :param peer_id:
+        :param group_id:
+        :param fields: https://vk.com/dev/objects/user  https://vk.com/dev/objects/group
+
+        :return:
+        """
+        if fields:
+            fields = ",".join(fields)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getConversationMembers", parameters=parameters)
+        return result
+
+    async def get_conversations(self, offset: base.Integer = 0,
+                                count: base.Integer = 20,
+                                filter: base.String = "all",
+                                extended: base.Boolean = False,
+                                start_message_id: base.Integer = None,
+                                fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                                group_id: base.Integer = None):
+        """
+        Returns a list of conversations.
+        https://vk.com/dev/messages.getConversations
+
+        :param offset: offset needed to return a specific subset of conversations
+        :param count: number of conversations to return
+        :param filter: types of conversations to return; possible values:
+                       all — all conversations;
+                       unread — conversations with unread messages;
+                       important — conversations marked as important (only for community messages);
+                       unanswered — conversations marked as unanswered (only for community messages).
+        :param extended: return additional fields for users and communities.
+        :param start_message_id: ID of the message from what to return conversations.
+        :param fields: list of additional fields for users and communities.
+                       https://vk.com/dev/objects/group https://vk.com/dev/objects/user
+        :param group_id: group ID (for community messages with a user access token).
+
+        :return:
+        """
+        if fields:
+            fields = ",".join(fields)
+        if extended:
+            extended = int(extended)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getConversations", parameters=parameters)
+        return result
+
+    async def get_conversations_by_id(self, peer_ids: typing.Union[typing.List, typing.Tuple],
+                                      extended: base.Boolean = False,
+                                      fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                                      group_id: base.Integer = None):
+        """
+        Returns conversations by their IDs
+        https://vk.com/dev/messages.getConversationsById
+
+        :param peer_ids: list of comma-separated destination IDs.
+        :param extended: 1 – return additional information about users and communities in users and communities fields.
+        :param fields: list of additional fields for users and communities.
+                       https://vk.com/dev/objects/group https://vk.com/dev/objects/user
+        :param group_id: group ID (for community messages with a user access token).
+
+        :return: Returns the total number of conversations in count field (integer) and
+                 array of conversations in items field.
+        """
+        if peer_ids:
+            peer_ids = ",".join(peer_ids)
+        if fields:
+            fields = ",".join(fields)
+        if extended:
+            extended = int(extended)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getConversationsById", parameters=parameters)
+        return result
+
+    async def get_history(self, offset: base.Integer,
+                          user_id: typing.Union[base.Integer, base.String],
+                          peer_id: typing.Union[base.Integer, base.String, None] = None,
+                          count: base.Integer = 20,
+                          start_message_id: base.Integer = None,
+                          rev: base.Boolean = True,
+                          extended: base.Boolean = False,
+                          fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                          group_id: base.Integer = None):
+        """
+        Returns message history for the specified user or group chat.
+        https://vk.com/dev/messages.getHistory
+
+        :param offset: Offset needed to return a specific subset of messages.
+        :param user_id: Number of messages to return.
+        :param peer_id: ID of the user whose message history you want to return.
+        :param count:
+        :param start_message_id: Starting message ID from which to return history.
+        :param rev: Sort order:
+                    1 — return messages in chronological order.
+                    0 — return messages in reverse chronological order.
+        :param extended:
+        :param fields:
+        :param group_id:
+
+        :return:
+        """
+        if fields:
+            fields = ",".join(fields)
+        if extended:
+            extended = int(extended)
+        if rev:
+            rev = int(rev)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getHistory", parameters=parameters)
+        return result
+
+    async def get_history_attachments(self,
+                                      peer_id: typing.Union[base.Integer, base.String],
+                                      media_type: base.String = "photo",
+                                      start_from: base.Integer = None,
+                                      count: base.Integer = 20,
+                                      photo_sizes: base.Boolean = None,
+                                      fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                                      group_id: base.Integer = None):
+        """
+        Returns media files from the dialog or group chat
+        https://vk.com/dev/messages.getHistoryAttachments
+
+        :param peer_id:
+        :param media_type: Type of media files to return:
+                           photo;
+                           video;
+                           audio;
+                           doc;
+                           link
+        :param start_from: Message ID to start return results from
+        :param count: Number of objects to return
+        :param photo_sizes: 1 — to return photo sizes in a special format
+                            https://vk.com/dev/photo_sizes
+        :param fields: Additional profile fields to return. https://vk.com/dev/fields
+        :param group_id:
+
+        :return: Returns a list of photo, video, audio or doc objects depending on
+                 media_type parameter value and additional next_from field containing new offset value.
+        """
+        if fields:
+            fields = ",".join(fields)
+        if photo_sizes:
+            photo_sizes = int(photo_sizes)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getHistoryAttachments", parameters=parameters)
+        return result
+
+    async def get_important_messages(self,
+                                     count: base.Integer = 20,
+                                     offset: base.Integer = None,
+                                     start_message_id: base.Integer = None,
+                                     preview_length: base.Integer = None,
+                                     extended: base.Boolean = False,
+                                     fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                                     group_id: base.Integer = None):
+        """
+        https://vk.com/dev/messages.getImportantMessages
+
+        :param count:
+        :param offset:
+        :param start_message_id:
+        :param preview_length:
+        :param extended:
+        :param fields:
+        :param group_id:
+        :return:
+        """
+        if fields:
+            fields = ",".join(fields)
+        if extended:
+            extended = int(extended)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getImportantMessages", parameters=parameters)
+        return result
+
+    async def get_invite_link(self,
+                              peer_id: typing.Union[base.Integer, base.String],
+                              reset: base.Boolean = False,
+                              group_id: base.Integer = None):
+        """
+        Receives a link to invite a user to the chat
+        https://vk.com/dev/messages.getInviteLink
+
+        :param peer_id:
+        :param reset:
+        :param group_id:
+
+        :return: Returns an objects with the only field link (string) containing the link for inviting
+        """
+        if reset:
+            reset = int(reset)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getInviteLink", parameters=parameters)
+        return result
+
+    async def get_last_activity(self, user_id: typing.Union[base.Integer, base.String]):
+        """
+        Returns a user's current status and date of last activity
+        https://vk.com/dev/messages.getLastActivity
+
+        :param user_id:
+
+        :return: Returns an object with the following fields:
+                 online — User's current status (0 — offline, 1 — online).
+                 time — Date (in Unix time) of the user's last activity.
+        """
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getLastActivity", parameters=parameters)
+        return result
+
+    async def get_long_poll_history(self, ts: base.Integer,
+                                    pts: base.Integer,
+                                    preview_length: base.Integer = 0,
+                                    onlines: base.Boolean = None,
+                                    fields: typing.Union[typing.List, typing.Tuple, None] = None,
+                                    events_limit: base.Integer = 1000,
+                                    msgs_limit: base.Integer = 200,
+                                    max_msg_id: base.Integer = None,
+                                    group_id: base.Integer = None,
+                                    lp_version: base.Integer = None,
+                                    last_n: base.Integer = 0):
+        """
+        Returns updates in user's private messages.
+        To speed up handling of private messages, it can be useful to cache previously
+        loaded messages on a user's mobile device/desktop, to prevent re-receipt at each call.
+        With this method, you can synchronize a local copy of the message list with the actual version.
+        https://vk.com/dev/messages.getLongPollHistory
+
+        :param ts: Last value of the ts parameter returned from the Long Poll server
+                    or by using messages.getLongPollServer method.
+        :param pts: Last value of pts parameter returned from the Long Poll server
+                    or by using messages.getLongPollServer method.
+        :param preview_length: Number of characters after which to truncate a previewed message.
+                               To preview the full message, specify 0.
+        :param onlines: 1 — to return history with online users only
+        :param fields: Additional profile fileds to return.
+                       list of comma-separated words, default photo,photo_medium_rec,sex,online,screen_name
+        :param events_limit: Maximum number of events to return.
+        :param msgs_limit: Maximum number of messages to return.
+        :param max_msg_id: Maximum ID of the message among existing ones in the local copy.
+                           Both messages received with API methods
+                           (for example, messages.getDialogs, messages.getHistory), and data received
+                           from a Long Poll server (events with code 4) are taken into account.
+        :param group_id:
+        :param lp_version: Long Poll version.
+        :param last_n: positive number, default 0, maximum value 2000
+
+        :return: Returns an object
+        """
+
+        if fields:
+            fields = ",".join(fields)
+        if onlines:
+            onlines = int(onlines)
+        parameters = generate_payload(**locals())
+        result = await self._api_request(method_name="messages.getLongPollHistory", parameters=parameters)
         return result
 
     async def send(self, user_id: typing.Union[base.Integer, base.String, None] = None,
@@ -281,35 +571,29 @@ class Messages(BaseMethod):
                    payload=None,
                    dont_parse_links: base.Boolean = False):
         """
-        Отправляет сообщение
-        :param user_id: идентификатор пользователя, которому отправляется сообщение
-        :param random_id: уникальный (в привязке к API_ID и ID отправителя) идентификатор,
-                          предназначенный для предотвращения повторной отправки одинакового сообщения.
-                          Сохраняется вместе с сообщением и доступен в истории сообщений.
-                          Заданный random_id используется для проверки уникальности за всю историю сообщений,
-                          поэтому используйте большой диапазон(до int32).
-        :param peer_id: идентификатор назначения
-        :param domain: короткий адрес пользователя (например, illarionov).
-        :param chat_id: идентификатор беседы, к которой будет относиться сообщение
-        :param user_ids: идентификаторы получателей сообщения (при необходимости отправить сообщение сразу
-                         нескольким пользователям).
-                         Доступно только для ключа доступа сообщества.
-                         Максимальное количество идентификаторов: 100.
-        :param message: текст личного сообщения. Обязательный параметр, если не задан параметр attachment.
-        :param lat: географическая широта (от -90 до 90).
-        :param long: географическая долгота (от -180 до 180).
-        :param attachment: медиавложения к личному сообщению, перечисленные через запятую
-        :param reply_to: идентификатор сообщения, на которое требуется ответить
-        :param forward_messages: идентификаторы пересылаемых сообщений, перечисленные через запятую.
-                                 Перечисленные сообщения отправителя будут отображаться в теле письма у получателя.
-                                 Не более 100 значений на верхнем уровне, максимальный уровень вложенности: 45,
-                                 максимальное количество пересылаемых сообщений 500
-        :param sticker_id: идентификатор стикера
-        :param group_id: идентификатор сообщества (для сообщений сообщества с ключом доступа пользователя).
-        :param keyboard: объект, описывающий клавиатуру для бота.  https://vk.com/dev/bots_docs_3
-        :param payload: Полезная нагрузка
-        :param dont_parse_links: 1 — не создавать сниппет ссылки из сообщения
-        :return:
+        Sends a message
+        https://vk.com/dev/messages.send
+
+        :param user_id: User ID (by default — current user).
+        :param random_id: Unique identifier to avoid resending the message
+        :param peer_id: Destination ID.
+        :param domain: User's short address (for example, illarionov).
+        :param chat_id: ID of conversation the message will relate to
+        :param user_ids: IDs of message recipients (if new conversation shall be started).
+        :param message: (Required if attachments is not set.) Text of the message.
+        :param lat: Geographical latitude of a check-in, in degrees (from -90 to 90).
+        :param long: Geographical longitude of a check-in, in degrees (from -180 to 180).
+        :param attachment: Array of attachments
+        :param reply_to: Reply to message id
+        :param forward_messages: ID of forwarded messages, separated with a comma.
+                                 Listed messages of the sender will be shown in the message body at the recipient's
+        :param sticker_id:
+        :param group_id:
+        :param keyboard: Keyboard object
+        :param payload:
+        :param dont_parse_links: flag, either 1 or 0
+
+        :return: Returns sent message ID
         """
         if user_ids:
             user_ids = ",".join(user_ids)
