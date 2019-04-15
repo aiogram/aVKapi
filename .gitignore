@@ -3,3 +3,5 @@ draft*
 config*
 venv/
 .idea/
+*.pyc
+myexamples/
