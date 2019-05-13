@@ -4,11 +4,11 @@ import logging
 
 from .filters import generate_default_filters
 from .handler import Handler
-from .storage import DisabledStorage
 from .middlewares import MiddlewareManager
-
+from .storage import DisabledStorage
 from ..types import Message, MessageType
 from ..utils import context
+from ..utils.mixins import ContextInstanceMixin, DataMixin
 from ..vk import VK
 
 EVENT_OBJECT = 'event_object'
@@ -16,7 +16,7 @@ EVENT_OBJECT = 'event_object'
 logger = logging.getLogger(__name__)
 
 
-class Dispatcher:
+class Dispatcher(DataMixin, ContextInstanceMixin):
     def __init__(self, vk, storage=None, loop=None):
         if loop is None:
             loop = vk.loop
@@ -128,29 +128,4 @@ class Dispatcher:
         if run_task:
             return self.async_task(callback)
         return callback
-
-    def stop_polling(self):
-        """
-        Break long-polling process.
-
-        :return:
-        """
-        if self._polling:
-            logger.info('Stop polling...')
-            self._polling = False
-
-    async def wait_closed(self):
-        """
-        Wait for the long-polling to close
-
-        :return:
-        """
-        await asyncio.shield(self._close_waiter, loop=self.loop)
-
-    def is_polling(self):
-        """
-        Check if polling is enabled
-
-        :return:
-        """
-        return self._polling
+      
