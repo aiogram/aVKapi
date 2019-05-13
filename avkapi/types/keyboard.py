@@ -107,3 +107,4 @@ class KeyboardButton(VKObject):
 class EmptyKeyboard(Keyboard):
     def __init__(self):
         super().__init__(buttons=[])
+        
