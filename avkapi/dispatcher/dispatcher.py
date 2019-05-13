@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class Dispatcher(DataMixin, ContextInstanceMixin):
     def __init__(self, vk, storage=None, loop=None):
         if loop is None:
-            loop = vk.loop
+            loop = vk.loop or asyncio.get_event_loop()
 
         self.storage = storage or DisabledStorage()
         self.vk: VK = vk
