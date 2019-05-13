@@ -33,6 +33,7 @@ class Message(base.VKObject):
     geo: Geo = fields.Field(base=Geo)
     payload: base.String = fields.Field()
     fwd_messages: typing.List['Message'] = fields.ListField(base='Message')
+    reply_message: 'Message' = fields.Field(base='Message')
     action: Action = fields.Field(base=Action)
     content_type = fields.Field()
 

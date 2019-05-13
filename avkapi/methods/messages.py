@@ -1,9 +1,12 @@
 from . import base
 from .base import BaseMethod
 import typing
+import random
 from ..types.attachment import Attachment
 from ..types.keyboard import Keyboard
 from ..utils.payload import generate_payload, prepare_arg
+
+random_ids_cache = []
 
 
 class Messages(BaseMethod):
@@ -597,10 +600,33 @@ class Messages(BaseMethod):
         """
         if user_ids:
             user_ids = ",".join(user_ids)
+
         if forward_messages:
             forward_messages = ",".join(forward_messages)
+
+        if random_id is None:
+            random_id = self._get_random_id()
+
         dont_parse_links = int(dont_parse_links)
         keyboard = prepare_arg(keyboard)
         parameters = generate_payload(**locals())
         result = await self._api_request(method_name='messages.send', parameters=parameters)
+        return result
+
+    @staticmethod
+    def _get_random_id():
+        """
+        Get unique random value with duplicates protection (last 10 values always cached)
+        :rtype: int
+        """
+        result = None
+        while result is None:
+            random_id = random.randint(-2147483648, 2147483647)  # int32 range
+            if random_id not in random_ids_cache:
+                result = random_id
+
+                # updating random cache
+                random_ids_cache.insert(0, random_id)
+                del random_ids_cache[10:]
+
         return result

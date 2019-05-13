@@ -19,7 +19,7 @@ class VK:
         self.confirmation_code = confirmation_code
         self.secret_key = secret_key
         self.access_token = access_token
-        self.api_version = '5.80'
+        self.api_version = '5.95'
 
         # asyncio loop instance
         if loop is None:
