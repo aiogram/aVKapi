@@ -35,7 +35,7 @@ aVKapi
 
 How to use
 --------------------------
-Look at example :)
+Look at the /examples folder :)
 
 
 Working features
