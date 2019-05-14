@@ -40,20 +40,19 @@ Look at the /examples folder :)
 
 Working features
 --------------------------
-long polling for groups
-webhook server (aiohttp)
-message handlers (in, out, edit)
+- long polling for groups
+- webhook server (aiohttp)
+- message handlers (in, out, edit)
 
 
 ToDo
 --------------------------
-all API objects
-all API methods
+- all API objects
+- all API methods
 
 
 Official aVKapi resources
 --------------------------
-
 - News: `@aiogram_live <https://t.me/aiogram_live>`_
 - Community: `@aiogram <https://t.me/aiogram>`_
 - Russian community: `@aiogram_ru <https://t.me/aiogram_ru>`_
