@@ -1,16 +1,40 @@
-from .filters import check_filters
-from ..utils import context
-import logging
+import inspect
+from contextvars import ContextVar
+from dataclasses import dataclass
+from typing import Optional, Iterable
 
-logger = logging.getLogger(__name__)
+ctx_data = ContextVar('ctx_handler_data')
+current_handler = ContextVar('current_handler')
 
 
-class SkipHandler(BaseException):
+@dataclass
+class FilterObj:
+    filter: callable
+    kwargs: dict
+    is_async: bool
+
+
+class SkipHandler(Exception):
     pass
 
 
-class CancelHandler(BaseException):
+class CancelHandler(Exception):
     pass
+
+
+def _get_spec(func: callable):
+    while hasattr(func, '__wrapped__'):  # Try to resolve decorated callbacks
+        func = func.__wrapped__
+
+    spec = inspect.getfullargspec(func)
+    return spec, func
+
+
+def _check_spec(spec: inspect.FullArgSpec, kwargs: dict):
+    if spec.varkw:
+        return kwargs
+
+    return {k: v for k, v in kwargs.items() if k in spec.args}
 
 
 class Handler:
@@ -22,6 +46,7 @@ class Handler:
         self.middleware_key = middleware_key
 
     def register(self, handler, filters=None, index=None):
+        from .filters import get_filters_spec
         """
         Register callback
 
@@ -31,9 +56,13 @@ class Handler:
         :param filters: list of filters
         :param index: you can reorder handlers
         """
+        spec, handler = _get_spec(handler)
+
         if filters and not isinstance(filters, (list, tuple, set)):
             filters = [filters]
-        record = (filters, handler)
+        filters = get_filters_spec(self.dispatcher, filters)
+
+        record = Handler.HandlerObj(handler=handler, spec=spec, filters=filters)
         if index is None:
             self.handlers.append(record)
         else:
@@ -46,10 +75,10 @@ class Handler:
         :param handler: callback
         :return:
         """
-        for handler_with_filters in self.handlers:
-            _, registered = handler_with_filters
+        for handler_obj in self.handlers:
+            registered = handler_obj.handler
             if handler is registered:
-                self.handlers.remove(handler_with_filters)
+                self.handlers.remove(handler_obj)
                 return True
         raise ValueError('This handler is not registered!')
 
@@ -60,40 +89,51 @@ class Handler:
         :param args:
         :return:
         """
-        logger.debug(f'handler is notified with {args}')
+        from .filters import check_filters, FilterNotPassed
+
         results = []
+
+        data = {}
+        ctx_data.set(data)
 
         if self.middleware_key:
             try:
-                await self.dispatcher.middleware.trigger(f"pre_process_{self.middleware_key}", args)
+                await self.dispatcher.middleware.trigger(f"pre_process_{self.middleware_key}", args + (data,))
             except CancelHandler:  # Allow to cancel current event
                 return results
 
-        for filters, handler in self.handlers:
-            logger.debug(f'Checking filters {filters} in handler {handler}')
-            if await check_filters(filters, args):
+        try:
+            for handler_obj in self.handlers:
                 try:
-                    if self.middleware_key:
-                        context.set_value('handler', handler)
-                        await self.dispatcher.middleware.trigger(f"process_{self.middleware_key}", args)
-
-                    response = await handler(*args)
-                    if response is not None:
-                        results.append(response)
-
-                    if self.once:
-                        break
-
-                except SkipHandler:
-                    logger.debug(f'Handler {handler} skipped')
+                    data.update(await check_filters(handler_obj.filters, args))
+                except FilterNotPassed:
                     continue
-
-                except CancelHandler:
-                    logger.debug(f'Handler {handler} cancelled')
-                    break
-
-        if self.middleware_key:
-            await self.dispatcher.middleware.trigger(f"post_process_{self.middleware_key}",
-                                                     args + (results,))
+                else:
+                    ctx_token = current_handler.set(handler_obj.handler)
+                    try:
+                        if self.middleware_key:
+                            await self.dispatcher.middleware.trigger(f"process_{self.middleware_key}", args + (data,))
+                        partial_data = _check_spec(handler_obj.spec, data)
+                        response = await handler_obj.handler(*args, **partial_data)
+                        if response is not None:
+                            results.append(response)
+                        if self.once:
+                            break
+                    except SkipHandler:
+                        continue
+                    except CancelHandler:
+                        break
+                    finally:
+                        current_handler.reset(ctx_token)
+        finally:
+            if self.middleware_key:
+                await self.dispatcher.middleware.trigger(f"post_process_{self.middleware_key}",
+                                                         args + (results, data,))
 
         return results
+
+    @dataclass
+    class HandlerObj:
+        handler: callable
+        spec: inspect.FullArgSpec
+        filters: Optional[Iterable[FilterObj]] = None

@@ -31,10 +31,10 @@ class BaseMethod:
         parameters['v'] = self._api_version
         p = {k: v for k, v in parameters.items() if v is not None}
         link = f'https://api.vk.com/method/{method_name}'
-        async with self._session.post(link, params=p) as resp:
+        async with self._session.post(link, params=p, timeout=25) as resp:
             status = resp.status
-            text = await resp.text()
-            logger.info(f'Response: {status}, {text}')
+            data = await resp.json()
+            logger.info(f'Response: {status}, {data}')
 
-        return text
+        return data
 

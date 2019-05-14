@@ -7,8 +7,8 @@ from warnings import warn
 
 from aiohttp import web
 
-from . import context
 from ..dispatcher.webhook import VK_DISPATCHER_KEY, WebhookRequestHandler
+from ..dispatcher import Dispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +22,12 @@ def _setup_callbacks(executor, on_startup=None, on_shutdown=None):
         executor.on_shutdown(on_shutdown)
 
 
-def start_polling(dispatcher, *, loop=None, skip_updates=False, reset_webhook=True,
-                  on_startup=None, on_shutdown=None, timeout=None):
+def start_polling(dispatcher, group_id, *, loop=None, skip_updates=False,
+                  on_startup=None, on_shutdown=None):
     """
     Start bot in long-polling mode
 
+    :param group_id:
     :param dispatcher:
     :param loop:
     :param skip_updates:
@@ -38,7 +39,7 @@ def start_polling(dispatcher, *, loop=None, skip_updates=False, reset_webhook=Tr
     executor = Executor(dispatcher, skip_updates=skip_updates, loop=loop)
     _setup_callbacks(executor, on_startup, on_shutdown)
 
-    executor.start_polling(reset_webhook=reset_webhook, timeout=timeout)
+    executor.start_polling(group_id=group_id)
 
 
 def start_webhook(dispatcher, webhook_path, *, loop=None, skip_updates=None,
@@ -90,7 +91,7 @@ class Executor:
     def __init__(self, dispatcher, skip_updates=None, check_ip=False, retry_after=None, loop=None):
         if loop is None:
             loop = dispatcher.loop
-        self.dispatcher = dispatcher
+        self.dispatcher: Dispatcher = dispatcher
         self.skip_updates = skip_updates
         self.check_ip = check_ip
         self.retry_after = retry_after
@@ -178,13 +179,9 @@ class Executor:
         self._check_frozen()
         self._freeze = True
 
-        self.loop.set_task_factory(context.task_factory)
-
     def _prepare_webhook(self, path=None, handler=WebhookRequestHandler):
         self._check_frozen()
         self._freeze = True
-
-        self.loop.set_task_factory(context.task_factory)
 
         app = self._web_app
         if app is None:
@@ -232,25 +229,25 @@ class Executor:
 
         web.run_app(self._web_app, **kwargs)
 
-    def start_polling(self, reset_webhook=None, timeout=None):
+    def start_polling(self, group_id):
         """
         Start bot in long-polling mode
 
-        :param reset_webhook:
-        :param timeout:
         """
         self._prepare_polling()
         loop: asyncio.AbstractEventLoop = self.loop
 
         try:
             loop.run_until_complete(self._startup_polling())
-            loop.create_task(self.dispatcher.start_polling(reset_webhook=reset_webhook, timeout=timeout))
+            loop.create_task(self.dispatcher.start_polling(group_id=group_id))
             loop.run_forever()
+
         except (KeyboardInterrupt, SystemExit):
-            # loop.stop()
             pass
+
         finally:
             loop.run_until_complete(self._shutdown_polling())
+
         logger.warning("Goodbye!")
 
     def start(self, future):
@@ -277,12 +274,12 @@ class Executor:
         logger.warning("Goodbye!")
         return result
 
-    async def _skip_updates(self):
-        await self.dispatcher.reset_webhook(True)
-        count = await self.dispatcher.skip_updates()
-        if count:
-            logger.warning(f"Skipped {count} updates.")
-        return count
+    # async def _skip_updates(self):
+    #     await self.dispatcher.reset_webhook(True)
+    #     count = await self.dispatcher.skip_updates()
+    #     if count:
+    #         logger.warning(f"Skipped {count} updates.")
+    #     return count
 
     async def _welcome(self):
         # user = await self.dispatcher.bot.me

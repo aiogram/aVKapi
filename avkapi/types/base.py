@@ -3,6 +3,7 @@ import typing
 from typing import TypeVar
 
 from .fields import BaseField
+from ..utils.mixins import ContextInstanceMixin, DataMixin
 import json
 __all__ = ('MetaVKObject', 'VKObject', 'InputFile', 'String', 'Integer', 'Float', 'Boolean')
 
@@ -59,7 +60,7 @@ class MetaVKObject(type):
         return cls._objects
 
 
-class VKObject(metaclass=MetaVKObject):
+class VKObject(ContextInstanceMixin, metaclass=MetaVKObject):
     """
     Abstract class for vk objects
     """

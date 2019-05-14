@@ -7,7 +7,8 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPGone
 
 from avkapi.types.event import EventType, Event
-from avkapi.utils import context
+from avkapi.dispatcher import Dispatcher
+from avkapi import VK
 
 logger = logging.getLogger(__name__)
 
@@ -72,10 +73,12 @@ class WebhookRequestHandler(web.View):
         """
         dp = self.request.app[VK_DISPATCHER_KEY]
         try:
-            context.set_value('dispatcher', dp)
-            context.set_value('vk', dp.vk)
+            Dispatcher.set_current(dp)
+            VK.set_current(dp.vk)
+
         except RuntimeError:
             pass
+
         return dp
 
     async def parse_event(self, vk):
@@ -113,21 +116,6 @@ class WebhookRequestHandler(web.View):
     async def confirm_server(vk):
         return web.Response(text=vk.confirmation_code)
 
-    async def post(self):
-        """ Process POST request """
-        self.validate_ip()
-
-        context.update_state({'CALLER': WEBHOOK,
-                              WEBHOOK_CONNECTION: True,
-                              WEBHOOK_REQUEST: self.request})
-
-        dispatcher = self.get_dispatcher()
-        event = await self.parse_event(dispatcher.vk)
-        if hasattr(event, "_body") and event._body == dispatcher.vk.confirmation_code.encode():
-            return event
-        asyncio.ensure_future(dispatcher.process_event(event))
-        return web.Response(text='ok')
-
     async def get(self):
         self.validate_ip()
         return web.Response(text='')
@@ -164,7 +152,6 @@ class WebhookRequestHandler(web.View):
             ip_address, accept = self.check_ip()
             if not accept:
                 raise web.HTTPUnauthorized()
-            context.set_value('VK_IP', ip_address)
 
 
 class GoneRequestHandler(web.View):
