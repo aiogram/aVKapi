@@ -17,7 +17,7 @@ aVKapi
    :target: https://pypi.python.org/pypi/avkapi
    :alt: PyPi downloads
 
-.. image:: https://img.shields.io/pypi/pyversions/viberio.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/pyversions/avkapi.svg?style=flat-square
    :target: https://pypi.python.org/pypi/avkapi
    :alt: Supported python versions
 
@@ -25,12 +25,30 @@ aVKapi
    :target: https://github.com/aiogram/avkapi/issues
    :alt: Github issues
 
-.. image:: https://img.shields.io/pypi/l/viberio.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/l/avkapi.svg?style=flat-square
    :target: https://opensource.org/licenses/MIT
    :alt: MIT License
 
 
 **aVKapi** is a pretty simple and fully asynchronous library for `VK API <https://vk.com/dev/methods>`_ written in Python 3.7 with `asyncio <https://docs.python.org/3/library/asyncio.html>`_ and `aiohttp <https://github.com/aio-libs/aiohttp>`_. It helps you to make your bots faster and simpler.
+
+
+How to use
+--------------------------
+Look at example :)
+
+
+Working features
+--------------------------
+long polling for groups
+webhook server (aiohttp)
+message handlers (in, out, edit)
+
+
+ToDo
+--------------------------
+all API objects
+all API methods
 
 
 Official aVKapi resources
@@ -39,5 +57,5 @@ Official aVKapi resources
 - News: `@aiogram_live <https://t.me/aiogram_live>`_
 - Community: `@aiogram <https://t.me/aiogram>`_
 - Russian community: `@aiogram_ru <https://t.me/aiogram_ru>`_
-- Source: `Github repo <https://github.com/aiogram/viberio>`_
-- Issues/Bug tracker: `Github issues tracker <https://github.com/aiogram/viberio/issues>`_
+- Source: `Github repo <https://github.com/aiogram/aVKapi>`_
+- Issues/Bug tracker: `Github issues tracker <https://github.com/aiogram/aVKapi/issues>`_
